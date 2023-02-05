@@ -4,6 +4,7 @@ import (
 	"fmt"
 	"go-xox-grpc-ai/internal/game/ai"
 	"go-xox-grpc-ai/internal/game/online"
+	"go-xox-grpc-ai/internal/utils"
 )
 
 func MainMenu() {
@@ -11,11 +12,7 @@ func MainMenu() {
 	fmt.Println("Please select your choice:")
 	fmt.Println("1) Play against computer")
 	fmt.Println("2) Play against your friend")
-	var choice string
-	for choice != "1" && choice != "2" {
-		fmt.Print("Choice: ")
-		choice = getUserInput()
-	}
+	var choice = utils.GetUserInput("1", "2")
 
 	if choice == "1" {
 		playAgainstComputer()
@@ -28,11 +25,8 @@ func playAgainstComputer() {
 	fmt.Println()
 	fmt.Println("1) Easy")
 	fmt.Println("2) Hard")
-	var choice string
-	for choice != "1" && choice != "2" {
-		fmt.Print("Difficulty: ")
-		choice = getUserInput()
-	}
+	var choice = utils.GetUserInput("1", "2")
+
 	ai.StartGame(choice)
 }
 
@@ -40,11 +34,7 @@ func playAgainstPlayer() {
 	fmt.Println()
 	fmt.Println("1) Host a game")
 	fmt.Println("2) Join a game")
-	var choice string
-	for choice != "1" && choice != "2" {
-		fmt.Print("Choice: ")
-		choice = getUserInput()
-	}
+	var choice = utils.GetUserInput("1", "2")
 
 	if choice == "1" {
 		online.HostGame()
@@ -55,10 +45,4 @@ func playAgainstPlayer() {
 
 		online.JoinGame(host)
 	}
-}
-
-func getUserInput() string {
-	var choice string
-	fmt.Scanln(&choice)
-	return choice
 }

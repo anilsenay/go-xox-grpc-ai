@@ -2,6 +2,7 @@ package game
 
 import (
 	"fmt"
+	"go-xox-grpc-ai/internal/utils"
 	"math/rand"
 	"strconv"
 )
@@ -51,8 +52,7 @@ func (g *GameBoard) PlayRound() {
 	var position int
 	for position == 0 {
 		fmt.Print("Position: ")
-		var _choice string
-		fmt.Scanln(&_choice)
+		var _choice = utils.GetUserInput("1", "2", "3", "4", "5", "6", "7", "8", "9")
 		pos, err := strconv.Atoi(_choice)
 		if err != nil || pos < 1 || pos > 9 {
 			continue

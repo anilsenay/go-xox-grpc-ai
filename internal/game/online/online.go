@@ -12,6 +12,7 @@ import (
 	"google.golang.org/grpc/peer"
 
 	"go-xox-grpc-ai/internal/game/online/api"
+	"go-xox-grpc-ai/internal/utils"
 )
 
 type gameService struct {
@@ -21,9 +22,8 @@ type gameService struct {
 func (s *gameService) Join(ctx context.Context, in *api.JoinRequest) (*api.JoinResponse, error) {
 	p, _ := peer.FromContext(ctx)
 
-	var choice string
 	fmt.Printf("A player with ip %s want to join. Do you accept? (Y/N): ", p.Addr.String())
-	fmt.Scanln(&choice)
+	var choice = utils.GetUserInput("Y", "N")
 
 	var success bool
 	if choice == "Y" {
