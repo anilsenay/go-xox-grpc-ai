@@ -3,7 +3,6 @@ package game
 import (
 	"fmt"
 	"go-xox-grpc-ai/internal/utils"
-	"math/rand"
 	"strconv"
 )
 
@@ -66,19 +65,6 @@ func (g *GameBoard) PlayRound() {
 	g.SwitchCurrentPlayer()
 }
 
-func (g *GameBoard) AiRandomPlay() {
-	var position int = -1
-	for position == -1 {
-		randomPos := rand.Intn(9)
-		if g.board[randomPos] == "" {
-			position = randomPos
-		}
-	}
-
-	g.board[position] = g.currentPlayer
-	g.SwitchCurrentPlayer()
-}
-
 func (g *GameBoard) GetCurrentPlayer() string {
 	return g.currentPlayer
 }
@@ -95,16 +81,23 @@ func (g *GameBoard) GetBoard() []string {
 	return g.board
 }
 
+func (g *GameBoard) SetBoardValue(pos int, value string) {
+	g.board[pos] = value
+}
+
 var cellPoints = []int{8, 1, 6, 3, 5, 7, 4, 9, 2}
 
 func (g *GameBoard) CheckGameFinished() bool {
+	filledCells := 0
 	x_points := [][]int{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
 	o_points := [][]int{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
 	for pos, val := range g.board {
 		if val == "X" {
 			x_points[pos/3][pos%3] = cellPoints[pos]
+			filledCells++
 		} else if val == "O" {
 			o_points[pos/3][pos%3] = cellPoints[pos]
+			filledCells++
 		}
 	}
 
@@ -115,6 +108,10 @@ func (g *GameBoard) CheckGameFinished() bool {
 	} else if checkBoardPoints(o_points) {
 		g.finished = true
 		g.winner = "O"
+		return true
+	} else if filledCells == 9 {
+		g.finished = true
+		g.winner = "-"
 		return true
 	}
 

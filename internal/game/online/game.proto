@@ -6,8 +6,8 @@ option go_package = "online/api";
 service GameService {
   rpc Join (JoinRequest) returns (JoinResponse);
   rpc GetGameBoard (GameBoardRequest) returns (GameBoardResponse);
-  rpc ServerMove (ServerMoveRequest) returns (ServerMoveResponse);
-  rpc ClientMove (ClientMoveRequest) returns (ClientMoveResponse);
+  rpc ServerMove (ServerMoveRequest) returns (stream ServerMoveResponse);
+  rpc ClientMove (ClientMoveRequest) returns (stream ClientMoveResponse);
 }
 
 message JoinRequest {

@@ -24,8 +24,9 @@ func MainMenu() {
 func playAgainstComputer() {
 	fmt.Println()
 	fmt.Println("1) Easy")
-	fmt.Println("2) Hard")
-	var choice = utils.GetUserInput("1", "2")
+	fmt.Println("2) Medium")
+	fmt.Println("3) Hard")
+	var choice = utils.GetUserInput("1", "2", "3")
 
 	ai.StartGame(choice)
 }
