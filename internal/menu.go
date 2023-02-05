@@ -3,6 +3,7 @@ package internal
 import (
 	"fmt"
 	"go-xox-grpc-ai/internal/game/ai"
+	"go-xox-grpc-ai/internal/game/online"
 )
 
 func MainMenu() {
@@ -46,9 +47,13 @@ func playAgainstPlayer() {
 	}
 
 	if choice == "1" {
-		// host game
+		online.HostGame()
 	} else if choice == "2" {
-		// join game
+		var host string
+		fmt.Print("Enter host ip:port to join the game: ")
+		fmt.Scanln(&host)
+
+		online.JoinGame(host)
 	}
 }
 

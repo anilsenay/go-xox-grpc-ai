@@ -24,6 +24,9 @@ func StartGame(difficulty string) {
 
 	if difficulty == "1" {
 		aiFunction = game.AiRandomPlay
+	} else if difficulty == "2" {
+		// implement minmax algorithm later
+		aiFunction = game.AiRandomPlay
 	}
 
 	for !game.CheckGameFinished() {
