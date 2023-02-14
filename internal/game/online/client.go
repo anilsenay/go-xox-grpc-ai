@@ -40,12 +40,12 @@ func (c *Client) JoinGame(host string) {
 	c.currentGame.Start()
 
 	c.clientPlayer = resp.ClientPlayer
-	if resp.ClientPlayer == "O" {
-		fmt.Println("\nYour oppenent chose to play X")
+	if resp.ClientPlayer == game.PLAYER_O {
+		fmt.Printf("\nYour oppenent chose to play %s\n", game.PLAYER_X)
 		fmt.Printf("Waiting your opponent for first move...\n\n")
 		fmt.Printf("==========================\n")
 	} else {
-		fmt.Println("\nYour oppenent chose to play O")
+		fmt.Printf("\nYour oppenent chose to play %s\n", game.PLAYER_O)
 		fmt.Printf("You play first!\n\n")
 		fmt.Printf("==========================\n")
 
@@ -127,7 +127,7 @@ func (c *Client) MovePlayed(board []string, isFinished bool) {
 	if isFinished {
 		c.currentGame.CheckGameFinished()
 		winner := c.currentGame.GetWinner()
-		if winner == "-" {
+		if winner == game.TIE {
 			fmt.Println("Tie!")
 		} else {
 			fmt.Println("Player " + winner + " Won!")

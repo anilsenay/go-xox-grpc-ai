@@ -53,16 +53,16 @@ func (s *Server) Join(ctx context.Context, in *api.JoinRequest) (*api.JoinRespon
 	if joinChoice == "Y" {
 		success = true
 
-		fmt.Print("Want to be X or O? ")
-		var xoChoice = utils.GetUserInput("X", "O")
+		fmt.Printf("Want to be %s or %s? ", game.PLAYER_X, game.PLAYER_O)
+		var xoChoice = utils.GetUserInput(game.PLAYER_X, game.PLAYER_O)
 
 		s.currentGame = game.NewGame()
 		s.currentGame.Start()
 		s.serverPlayer = xoChoice
-		if xoChoice == "X" {
-			s.clientPlayer = "O"
+		if xoChoice == game.PLAYER_X {
+			s.clientPlayer = game.PLAYER_O
 		} else {
-			s.clientPlayer = "X"
+			s.clientPlayer = game.PLAYER_X
 			fmt.Printf("\nWaiting your opponent for first move...\n\n")
 			fmt.Printf("==========================\n")
 		}
@@ -140,7 +140,7 @@ func (s *Server) MovePlayed(pos int, player string) {
 	isFinished := s.currentGame.CheckGameFinished()
 	if isFinished {
 		winner := s.currentGame.GetWinner()
-		if winner == "-" {
+		if winner == game.TIE {
 			fmt.Println("Tie!")
 		} else {
 			fmt.Println("Player " + winner + " Won!")

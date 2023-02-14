@@ -12,40 +12,40 @@ var Difficulty string
 func StartGame(difficulty string) {
 	Difficulty = difficulty
 
-	fmt.Println("Want to be X or O? ")
+	fmt.Printf("Want to be %s or %s? ", game.PLAYER_X, game.PLAYER_O)
 	var player string
-	for player != "X" && player != "O" {
+	for player != game.PLAYER_X && player != game.PLAYER_O {
 		fmt.Print("Choice: ")
 		fmt.Scanln(&player)
 	}
 
-	game := game.NewGame()
-	game.Start()
+	currentGame := game.NewGame()
+	currentGame.Start()
 
 	var aiFunction func()
 
 	if difficulty == "1" {
-		aiFunction = aiRandomPlay(game)
+		aiFunction = aiRandomPlay(currentGame)
 	} else if difficulty == "2" {
-		aiFunction = aiBestOrRandom(game)
+		aiFunction = aiBestOrRandom(currentGame)
 	} else if difficulty == "3" {
-		aiFunction = aiPlay(game)
+		aiFunction = aiPlay(currentGame)
 	}
 
-	for !game.CheckGameFinished() {
-		if game.GetCurrentPlayer() == player {
-			game.PlayRound()
+	for !currentGame.CheckGameFinished() {
+		if currentGame.GetCurrentPlayer() == player {
+			currentGame.PlayRound()
 		} else {
 			aiFunction()
 		}
-		game.RenderBoard()
+		currentGame.RenderBoard()
 	}
 
-	winner := game.GetWinner()
-	if winner == "-" {
+	winner := currentGame.GetWinner()
+	if winner == game.TIE {
 		fmt.Println("Tie!")
 	} else {
-		fmt.Println("Player " + game.GetWinner() + " Won!")
+		fmt.Println("Player " + winner + " Won!")
 	}
 
 }
@@ -68,7 +68,7 @@ func aiRandomPlay(g *game.GameBoard) func() {
 		for position == -1 {
 			rand.Seed(time.Now().UnixNano())
 			randomPos := rand.Intn(9)
-			if g.GetBoard()[randomPos] == "" {
+			if g.GetBoard()[randomPos] == game.EMPTY {
 				position = randomPos
 			}
 		}
@@ -94,12 +94,12 @@ func findBestMove(board []string, currentPlayer string) int {
 	for i := 0; i < 3; i++ {
 		for j := 0; j < 3; j++ {
 			pos := i*3 + j%3
-			if board[pos] == "" {
+			if board[pos] == game.EMPTY {
 				board[pos] = currentPlayer
 
 				moveValue := miniMax(board, 0, false, currentPlayer)
 
-				board[pos] = ""
+				board[pos] = game.EMPTY
 
 				if moveValue > bestVal {
 					bestMove = pos
@@ -116,7 +116,7 @@ func isMovesLeft(board []string) bool {
 	for i := 0; i < 3; i++ {
 		for j := 0; j < 3; j++ {
 			pos := i*3 + j%3
-			if board[pos] == "" {
+			if board[pos] == game.EMPTY {
 				return true
 			}
 		}
@@ -141,10 +141,10 @@ func miniMax(board []string, depth int, isMax bool, currentPlayer string) int {
 		for i := 0; i < 3; i++ {
 			for j := 0; j < 3; j++ {
 				pos := i*3 + j%3
-				if board[pos] == "" {
+				if board[pos] == game.EMPTY {
 					board[pos] = currentPlayer
 					best = max(best, miniMax(board, depth+1, !isMax, currentPlayer))
-					board[pos] = ""
+					board[pos] = game.EMPTY
 				}
 			}
 		}
@@ -155,14 +155,14 @@ func miniMax(board []string, depth int, isMax bool, currentPlayer string) int {
 		for i := 0; i < 3; i++ {
 			for j := 0; j < 3; j++ {
 				pos := i*3 + j%3
-				if board[pos] == "" {
-					if currentPlayer == "O" {
-						board[pos] = "X"
+				if board[pos] == game.EMPTY {
+					if currentPlayer == game.PLAYER_O {
+						board[pos] = game.PLAYER_X
 					} else {
-						board[pos] = "O"
+						board[pos] = game.PLAYER_O
 					}
 					best = min(best, miniMax(board, depth+1, !isMax, currentPlayer))
-					board[pos] = ""
+					board[pos] = game.EMPTY
 				}
 			}
 		}
@@ -185,9 +185,9 @@ func min(a, b int) int {
 }
 
 func heuristic(board []string, currentPlayer string) int {
-	opponent := "X"
-	if currentPlayer == "X" {
-		opponent = "O"
+	opponent := game.PLAYER_X
+	if currentPlayer == game.PLAYER_X {
+		opponent = game.PLAYER_O
 	}
 
 	for i := 0; i < 3; i++ {

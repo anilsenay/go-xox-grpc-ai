@@ -6,6 +6,11 @@ import (
 	"strconv"
 )
 
+var PLAYER_X = "X"
+var PLAYER_O = "O"
+var EMPTY = ""
+var TIE = "-"
+
 type GameBoard struct {
 	board         []string
 	currentPlayer string
@@ -16,7 +21,7 @@ type GameBoard struct {
 func NewGame() *GameBoard {
 	return &GameBoard{
 		board:         make([]string, 9),
-		currentPlayer: "X",
+		currentPlayer: PLAYER_X,
 	}
 }
 
@@ -41,7 +46,7 @@ func (g *GameBoard) RenderBoard() {
 }
 
 func (g *GameBoard) renderCell(position int) string {
-	if g.board[position] == "" {
+	if g.board[position] == EMPTY {
 		return fmt.Sprintf("[%d]", position+1)
 	} else {
 		return " " + g.board[position] + " "
@@ -57,7 +62,7 @@ func (g *GameBoard) PlayRound() {
 		if err != nil || pos < 1 || pos > 9 {
 			continue
 		}
-		if g.board[pos-1] == "" {
+		if g.board[pos-1] == EMPTY {
 			position = pos
 		}
 	}
@@ -71,10 +76,10 @@ func (g *GameBoard) GetCurrentPlayer() string {
 }
 
 func (g *GameBoard) SwitchCurrentPlayer() {
-	if g.currentPlayer == "X" {
-		g.currentPlayer = "O"
+	if g.currentPlayer == PLAYER_X {
+		g.currentPlayer = PLAYER_O
 	} else {
-		g.currentPlayer = "X"
+		g.currentPlayer = PLAYER_X
 	}
 }
 
@@ -91,7 +96,7 @@ func (g *GameBoard) IsLegalMove(position int) bool {
 	if position < 1 || position > 9 {
 		return false
 	}
-	return g.board[position-1] == ""
+	return g.board[position-1] == EMPTY
 }
 
 func (g *GameBoard) SetBoardValue(pos int, value string) {
@@ -105,10 +110,10 @@ func (g *GameBoard) CheckGameFinished() bool {
 	x_points := [][]int{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
 	o_points := [][]int{{0, 0, 0}, {0, 0, 0}, {0, 0, 0}}
 	for pos, val := range g.board {
-		if val == "X" {
+		if val == PLAYER_X {
 			x_points[pos/3][pos%3] = cellPoints[pos]
 			filledCells++
-		} else if val == "O" {
+		} else if val == PLAYER_O {
 			o_points[pos/3][pos%3] = cellPoints[pos]
 			filledCells++
 		}
@@ -116,15 +121,15 @@ func (g *GameBoard) CheckGameFinished() bool {
 
 	if checkBoardPoints(x_points) {
 		g.finished = true
-		g.winner = "X"
+		g.winner = PLAYER_X
 		return true
 	} else if checkBoardPoints(o_points) {
 		g.finished = true
-		g.winner = "O"
+		g.winner = PLAYER_O
 		return true
 	} else if filledCells == 9 {
 		g.finished = true
-		g.winner = "-"
+		g.winner = TIE
 		return true
 	}
 
