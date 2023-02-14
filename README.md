@@ -33,9 +33,11 @@ The AI is implemented using the Minimax algorithm.
 When you choice `Play against computer`, you have to select difficulty for AI.
 
 1. `Easy`: AI will play randomly
+
    ![](https://s3.gifyu.com/images/ezgif.com-video-to-gif5.gif)
 2. `Medium`: AI will play randomly or use minimax algorithm
 3. `Hard`: AI will use minimax algorithm
+
    ![](https://s3.gifyu.com/images/ezgif.com-video-to-gif6.gif)
 
 ---
