@@ -18,29 +18,13 @@ import (
 
 type Server struct {
 	api.UnimplementedGameServiceServer
-	currentGame *game.GameBoard
+	currentGame  *game.GameBoard
+	serverPlayer string
+	clientPlayer string
 }
 
 func NewServer() *Server {
 	return &Server{}
-}
-
-func (s *Server) Join(ctx context.Context, in *api.JoinRequest) (*api.JoinResponse, error) {
-	p, _ := peer.FromContext(ctx)
-
-	fmt.Printf("A player with ip %s want to join. Do you accept? (Y/N): ", p.Addr.String())
-	var choice = utils.GetUserInput("Y", "N")
-
-	var success bool
-	if choice == "Y" {
-		success = true
-		s.currentGame = game.NewGame()
-		s.currentGame.Start()
-	}
-
-	return &api.JoinResponse{
-		Success: success,
-	}, nil
 }
 
 func (s *Server) HostGame() {
@@ -59,11 +43,42 @@ func (s *Server) HostGame() {
 	}
 }
 
+func (s *Server) Join(ctx context.Context, in *api.JoinRequest) (*api.JoinResponse, error) {
+	p, _ := peer.FromContext(ctx)
+
+	fmt.Printf("A player with ip %s want to join. Do you accept? (Y/N): ", p.Addr.String())
+	var joinChoice = utils.GetUserInput("Y", "N")
+
+	var success bool
+	if joinChoice == "Y" {
+		success = true
+
+		fmt.Print("Want to be X or O? ")
+		var xoChoice = utils.GetUserInput("X", "O")
+
+		s.currentGame = game.NewGame()
+		s.currentGame.Start()
+		s.serverPlayer = xoChoice
+		if xoChoice == "X" {
+			s.clientPlayer = "O"
+		} else {
+			s.clientPlayer = "X"
+			fmt.Printf("\nWaiting your opponent for first move...\n\n")
+			fmt.Printf("==========================\n")
+		}
+	}
+
+	return &api.JoinResponse{
+		Success:      success,
+		ClientPlayer: s.clientPlayer,
+	}, nil
+}
+
 func (s *Server) ClientMove(ctx context.Context, req *api.ClientMoveRequest) (*api.ClientMoveResponse, error) {
 	pos := int(req.Position)
 	isLegalMove := s.currentGame.IsLegalMove(pos)
 	if isLegalMove {
-		s.MovePlayed(pos-1, "O")
+		s.MovePlayed(pos-1, s.clientPlayer)
 
 		return &api.ClientMoveResponse{
 			Success:        isLegalMove,
@@ -78,8 +93,13 @@ func (s *Server) ClientMove(ctx context.Context, req *api.ClientMoveRequest) (*a
 
 func (s *Server) ServerMove(req *api.ServerMoveRequest, stream api.GameService_ServerMoveServer) error {
 	for {
-		if s.currentGame.GetCurrentPlayer() != "X" {
+		if s.currentGame.GetCurrentPlayer() != s.serverPlayer {
 			continue
+		}
+
+		if s.currentGame.IsFinished() {
+			stream.Context().Done()
+			break
 		}
 
 		pos, err := MovePosition()
@@ -87,7 +107,13 @@ func (s *Server) ServerMove(req *api.ServerMoveRequest, stream api.GameService_S
 			pos, err = MovePosition()
 		}
 
-		s.MovePlayed(pos-1, "X")
+		// check again to prevent move after a finished game
+		if s.currentGame.IsFinished() {
+			stream.Context().Done()
+			break
+		}
+
+		s.MovePlayed(pos-1, s.serverPlayer)
 
 		stream.Send(&api.ServerMoveResponse{
 			Position:       int32(pos),
@@ -96,6 +122,8 @@ func (s *Server) ServerMove(req *api.ServerMoveRequest, stream api.GameService_S
 			IsGameFinished: s.currentGame.CheckGameFinished(),
 		})
 	}
+
+	return nil
 }
 
 func MovePosition() (int, error) {
@@ -111,7 +139,6 @@ func (s *Server) MovePlayed(pos int, player string) {
 
 	isFinished := s.currentGame.CheckGameFinished()
 	if isFinished {
-		s.currentGame.CheckGameFinished()
 		winner := s.currentGame.GetWinner()
 		if winner == "-" {
 			fmt.Println("Tie!")

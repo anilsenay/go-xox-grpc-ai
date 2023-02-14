@@ -15,6 +15,7 @@ message JoinRequest {
 
 message JoinResponse {
   bool success = 1;
+  string clientPlayer = 2;
 }
 
 message ServerMoveRequest{}

@@ -38,8 +38,25 @@ func (c *Client) JoinGame(host string) {
 	fmt.Println("\nYou have joined the game!")
 	c.currentGame = game.NewGame()
 	c.currentGame.Start()
-	fmt.Printf("\nWaiting your opponent for first move...\n\n")
-	fmt.Printf("==========================\n")
+
+	c.clientPlayer = resp.ClientPlayer
+	if resp.ClientPlayer == "O" {
+		fmt.Println("\nYour oppenent chose to play X")
+		fmt.Printf("Waiting your opponent for first move...\n\n")
+		fmt.Printf("==========================\n")
+	} else {
+		fmt.Println("\nYour oppenent chose to play O")
+		fmt.Printf("You play first!\n\n")
+		fmt.Printf("==========================\n")
+
+		clientMoved := false
+		for !clientMoved {
+			err := c.ClientMoves(context.Background())
+			if err == nil {
+				clientMoved = true
+			}
+		}
+	}
 
 	c.ReadStream()
 }
@@ -50,7 +67,6 @@ func (c *Client) ReadStream() {
 	waitResponse := make(chan error)
 
 	stream, _ := c.grpcClient.ServerMove(ctx, &api.ServerMoveRequest{})
-	c.clientPlayer = "O"
 
 	for {
 		streamResponse, err := stream.Recv()
@@ -66,27 +82,41 @@ func (c *Client) ReadStream() {
 		c.MovePlayed(streamResponse.Board, streamResponse.IsGameFinished)
 
 		for c.currentGame.GetCurrentPlayer() == c.clientPlayer && !c.currentGame.IsFinished() {
-			choiceAsInt, err := MovePosition()
+			err := c.ClientMoves(ctx)
 			if err != nil {
-				fmt.Println("Please select a legal position")
 				continue
-			}
-
-			req := &api.ClientMoveRequest{
-				Position: int32(choiceAsInt),
-			}
-
-			resp, err := c.grpcClient.ClientMove(context.Background(), req)
-			if err != nil {
-				fmt.Println("Error:", err)
-			}
-			if resp.Success {
-				c.MovePlayed(resp.Board, streamResponse.IsGameFinished)
-			} else {
-				fmt.Println("Please select a legal position")
 			}
 		}
 	}
+}
+
+func (c *Client) ClientMoves(ctx context.Context) error {
+	choiceAsInt, err := MovePosition()
+	if err != nil {
+		fmt.Println("Please select a legal position")
+		return err
+	}
+
+	req := &api.ClientMoveRequest{
+		Position: int32(choiceAsInt),
+	}
+
+	resp, err := c.grpcClient.ClientMove(ctx, req)
+	if err != nil {
+		fmt.Println("Error:", err)
+		return err
+	}
+	if resp.Success {
+		c.MovePlayed(resp.Board, resp.IsGameFinished)
+	} else {
+		fmt.Println("Please select a legal position")
+	}
+
+	if c.currentGame.IsFinished() {
+		ctx.Done()
+	}
+
+	return nil
 }
 
 func (c *Client) MovePlayed(board []string, isFinished bool) {
