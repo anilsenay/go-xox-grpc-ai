@@ -38,12 +38,14 @@ func playAgainstPlayer() {
 	var choice = utils.GetUserInput("1", "2")
 
 	if choice == "1" {
-		online.HostGame()
+		server := online.NewServer()
+		server.HostGame()
 	} else if choice == "2" {
 		var host string
 		fmt.Print("Enter host ip:port to join the game: ")
 		fmt.Scanln(&host)
 
-		online.JoinGame(host)
+		client := online.NewClient()
+		client.JoinGame(host)
 	}
 }

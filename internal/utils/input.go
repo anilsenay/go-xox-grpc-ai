@@ -16,6 +16,9 @@ func GetUserInput(validAnswers ...string) string {
 				isValid = true
 			}
 		}
+		if !isValid {
+			fmt.Println("please enter a valid answer")
+		}
 	}
 	return strings.ToUpper(choice)
 }

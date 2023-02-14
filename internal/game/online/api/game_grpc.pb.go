@@ -23,9 +23,8 @@ const _ = grpc.SupportPackageIsVersion7
 // For semantics around ctx use and closing/ending streaming RPCs, please refer to https://pkg.go.dev/google.golang.org/grpc/?tab=doc#ClientConn.NewStream.
 type GameServiceClient interface {
 	Join(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*JoinResponse, error)
-	GetGameBoard(ctx context.Context, in *GameBoardRequest, opts ...grpc.CallOption) (*GameBoardResponse, error)
 	ServerMove(ctx context.Context, in *ServerMoveRequest, opts ...grpc.CallOption) (GameService_ServerMoveClient, error)
-	ClientMove(ctx context.Context, in *ClientMoveRequest, opts ...grpc.CallOption) (GameService_ClientMoveClient, error)
+	ClientMove(ctx context.Context, in *ClientMoveRequest, opts ...grpc.CallOption) (*ClientMoveResponse, error)
 }
 
 type gameServiceClient struct {
@@ -39,15 +38,6 @@ func NewGameServiceClient(cc grpc.ClientConnInterface) GameServiceClient {
 func (c *gameServiceClient) Join(ctx context.Context, in *JoinRequest, opts ...grpc.CallOption) (*JoinResponse, error) {
 	out := new(JoinResponse)
 	err := c.cc.Invoke(ctx, "/online.GameService/Join", in, out, opts...)
-	if err != nil {
-		return nil, err
-	}
-	return out, nil
-}
-
-func (c *gameServiceClient) GetGameBoard(ctx context.Context, in *GameBoardRequest, opts ...grpc.CallOption) (*GameBoardResponse, error) {
-	out := new(GameBoardResponse)
-	err := c.cc.Invoke(ctx, "/online.GameService/GetGameBoard", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
@@ -86,36 +76,13 @@ func (x *gameServiceServerMoveClient) Recv() (*ServerMoveResponse, error) {
 	return m, nil
 }
 
-func (c *gameServiceClient) ClientMove(ctx context.Context, in *ClientMoveRequest, opts ...grpc.CallOption) (GameService_ClientMoveClient, error) {
-	stream, err := c.cc.NewStream(ctx, &GameService_ServiceDesc.Streams[1], "/online.GameService/ClientMove", opts...)
+func (c *gameServiceClient) ClientMove(ctx context.Context, in *ClientMoveRequest, opts ...grpc.CallOption) (*ClientMoveResponse, error) {
+	out := new(ClientMoveResponse)
+	err := c.cc.Invoke(ctx, "/online.GameService/ClientMove", in, out, opts...)
 	if err != nil {
 		return nil, err
 	}
-	x := &gameServiceClientMoveClient{stream}
-	if err := x.ClientStream.SendMsg(in); err != nil {
-		return nil, err
-	}
-	if err := x.ClientStream.CloseSend(); err != nil {
-		return nil, err
-	}
-	return x, nil
-}
-
-type GameService_ClientMoveClient interface {
-	Recv() (*ClientMoveResponse, error)
-	grpc.ClientStream
-}
-
-type gameServiceClientMoveClient struct {
-	grpc.ClientStream
-}
-
-func (x *gameServiceClientMoveClient) Recv() (*ClientMoveResponse, error) {
-	m := new(ClientMoveResponse)
-	if err := x.ClientStream.RecvMsg(m); err != nil {
-		return nil, err
-	}
-	return m, nil
+	return out, nil
 }
 
 // GameServiceServer is the server API for GameService service.
@@ -123,9 +90,8 @@ func (x *gameServiceClientMoveClient) Recv() (*ClientMoveResponse, error) {
 // for forward compatibility
 type GameServiceServer interface {
 	Join(context.Context, *JoinRequest) (*JoinResponse, error)
-	GetGameBoard(context.Context, *GameBoardRequest) (*GameBoardResponse, error)
 	ServerMove(*ServerMoveRequest, GameService_ServerMoveServer) error
-	ClientMove(*ClientMoveRequest, GameService_ClientMoveServer) error
+	ClientMove(context.Context, *ClientMoveRequest) (*ClientMoveResponse, error)
 	mustEmbedUnimplementedGameServiceServer()
 }
 
@@ -136,14 +102,11 @@ type UnimplementedGameServiceServer struct {
 func (UnimplementedGameServiceServer) Join(context.Context, *JoinRequest) (*JoinResponse, error) {
 	return nil, status.Errorf(codes.Unimplemented, "method Join not implemented")
 }
-func (UnimplementedGameServiceServer) GetGameBoard(context.Context, *GameBoardRequest) (*GameBoardResponse, error) {
-	return nil, status.Errorf(codes.Unimplemented, "method GetGameBoard not implemented")
-}
 func (UnimplementedGameServiceServer) ServerMove(*ServerMoveRequest, GameService_ServerMoveServer) error {
 	return status.Errorf(codes.Unimplemented, "method ServerMove not implemented")
 }
-func (UnimplementedGameServiceServer) ClientMove(*ClientMoveRequest, GameService_ClientMoveServer) error {
-	return status.Errorf(codes.Unimplemented, "method ClientMove not implemented")
+func (UnimplementedGameServiceServer) ClientMove(context.Context, *ClientMoveRequest) (*ClientMoveResponse, error) {
+	return nil, status.Errorf(codes.Unimplemented, "method ClientMove not implemented")
 }
 func (UnimplementedGameServiceServer) mustEmbedUnimplementedGameServiceServer() {}
 
@@ -176,24 +139,6 @@ func _GameService_Join_Handler(srv interface{}, ctx context.Context, dec func(in
 	return interceptor(ctx, in, info, handler)
 }
 
-func _GameService_GetGameBoard_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
-	in := new(GameBoardRequest)
-	if err := dec(in); err != nil {
-		return nil, err
-	}
-	if interceptor == nil {
-		return srv.(GameServiceServer).GetGameBoard(ctx, in)
-	}
-	info := &grpc.UnaryServerInfo{
-		Server:     srv,
-		FullMethod: "/online.GameService/GetGameBoard",
-	}
-	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
-		return srv.(GameServiceServer).GetGameBoard(ctx, req.(*GameBoardRequest))
-	}
-	return interceptor(ctx, in, info, handler)
-}
-
 func _GameService_ServerMove_Handler(srv interface{}, stream grpc.ServerStream) error {
 	m := new(ServerMoveRequest)
 	if err := stream.RecvMsg(m); err != nil {
@@ -215,25 +160,22 @@ func (x *gameServiceServerMoveServer) Send(m *ServerMoveResponse) error {
 	return x.ServerStream.SendMsg(m)
 }
 
-func _GameService_ClientMove_Handler(srv interface{}, stream grpc.ServerStream) error {
-	m := new(ClientMoveRequest)
-	if err := stream.RecvMsg(m); err != nil {
-		return err
+func _GameService_ClientMove_Handler(srv interface{}, ctx context.Context, dec func(interface{}) error, interceptor grpc.UnaryServerInterceptor) (interface{}, error) {
+	in := new(ClientMoveRequest)
+	if err := dec(in); err != nil {
+		return nil, err
 	}
-	return srv.(GameServiceServer).ClientMove(m, &gameServiceClientMoveServer{stream})
-}
-
-type GameService_ClientMoveServer interface {
-	Send(*ClientMoveResponse) error
-	grpc.ServerStream
-}
-
-type gameServiceClientMoveServer struct {
-	grpc.ServerStream
-}
-
-func (x *gameServiceClientMoveServer) Send(m *ClientMoveResponse) error {
-	return x.ServerStream.SendMsg(m)
+	if interceptor == nil {
+		return srv.(GameServiceServer).ClientMove(ctx, in)
+	}
+	info := &grpc.UnaryServerInfo{
+		Server:     srv,
+		FullMethod: "/online.GameService/ClientMove",
+	}
+	handler := func(ctx context.Context, req interface{}) (interface{}, error) {
+		return srv.(GameServiceServer).ClientMove(ctx, req.(*ClientMoveRequest))
+	}
+	return interceptor(ctx, in, info, handler)
 }
 
 // GameService_ServiceDesc is the grpc.ServiceDesc for GameService service.
@@ -248,19 +190,14 @@ var GameService_ServiceDesc = grpc.ServiceDesc{
 			Handler:    _GameService_Join_Handler,
 		},
 		{
-			MethodName: "GetGameBoard",
-			Handler:    _GameService_GetGameBoard_Handler,
+			MethodName: "ClientMove",
+			Handler:    _GameService_ClientMove_Handler,
 		},
 	},
 	Streams: []grpc.StreamDesc{
 		{
 			StreamName:    "ServerMove",
 			Handler:       _GameService_ServerMove_Handler,
-			ServerStreams: true,
-		},
-		{
-			StreamName:    "ClientMove",
-			Handler:       _GameService_ClientMove_Handler,
 			ServerStreams: true,
 		},
 	},

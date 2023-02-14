@@ -29,6 +29,7 @@ func (g *GameBoard) Start() {
 }
 
 func (g *GameBoard) RenderBoard() {
+	fmt.Println()
 	fmt.Printf(" %s | %s | %s \n", g.renderCell(0), g.renderCell(1), g.renderCell(2))
 	fmt.Println("----------------------")
 	fmt.Printf(" %s | %s | %s \n", g.renderCell(3), g.renderCell(4), g.renderCell(5))
@@ -79,6 +80,18 @@ func (g *GameBoard) SwitchCurrentPlayer() {
 
 func (g *GameBoard) GetBoard() []string {
 	return g.board
+}
+
+func (g *GameBoard) SetBoard(newBoard []string) {
+	g.board = newBoard
+}
+
+// position: from 1 to 9 == [1,9]
+func (g *GameBoard) IsLegalMove(position int) bool {
+	if position < 1 || position > 9 {
+		return false
+	}
+	return g.board[position-1] == ""
 }
 
 func (g *GameBoard) SetBoardValue(pos int, value string) {
@@ -142,4 +155,8 @@ func checkBoardPoints(p [][]int) bool {
 
 func (g *GameBoard) GetWinner() string {
 	return g.winner
+}
+
+func (g *GameBoard) IsFinished() bool {
+	return g.finished
 }

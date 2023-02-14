@@ -5,9 +5,8 @@ option go_package = "online/api";
 
 service GameService {
   rpc Join (JoinRequest) returns (JoinResponse);
-  rpc GetGameBoard (GameBoardRequest) returns (GameBoardResponse);
   rpc ServerMove (ServerMoveRequest) returns (stream ServerMoveResponse);
-  rpc ClientMove (ClientMoveRequest) returns (stream ClientMoveResponse);
+  rpc ClientMove (ClientMoveRequest) returns (ClientMoveResponse);
 }
 
 message JoinRequest {
@@ -18,12 +17,13 @@ message JoinResponse {
   bool success = 1;
 }
 
-message GameBoardRequest {
-}
+message ServerMoveRequest{}
 
-message GameBoardResponse {
-  repeated string board = 1;
-  string currentPlayer = 2;
+message ServerMoveResponse {
+  int32 position = 1;
+  repeated string board = 2;
+  string currentPlayer = 3;
+  bool isGameFinished = 4;
 }
 
 message ClientMoveRequest {
@@ -32,11 +32,7 @@ message ClientMoveRequest {
 
 message ClientMoveResponse {
   bool success = 1; 
-}
-
-message ServerMoveRequest {
-  repeated string board = 1;
-}
-
-message ServerMoveResponse {
+  repeated string board = 2;
+  string currentPlayer = 3;
+  bool isGameFinished = 4;
 }
